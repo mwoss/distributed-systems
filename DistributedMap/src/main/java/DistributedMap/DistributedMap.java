@@ -11,10 +11,11 @@ import org.jgroups.stack.ProtocolStack;
 
 import java.net.InetAddress;
 import java.util.HashMap;
+import java.util.Map;
 
 public class DistributedMap implements SimplStringMap {
 
-    private final HashMap<String, String> distMap;
+    private final Map<String, String> distMap;
     private JChannel jChannel;
     private MessageReceiver messageReceiver;
 
@@ -22,54 +23,50 @@ public class DistributedMap implements SimplStringMap {
         this.distMap = new HashMap<>();
         this.jChannel = new JChannel();
         this.messageReceiver = new MessageReceiver(distMap, jChannel);
+        initProtocolStack(address);
         jChannel.setReceiver(this.messageReceiver);
         jChannel.connect(channelName);
         jChannel.getState(null, 5000);
-        initProtocolStack(address);
     }
 
     public boolean containsKey(String key) {
-        synchronized (distMap) {
-            return distMap.containsKey(key);
-        }
+        return distMap.containsKey(key);
     }
 
     public String get(String key) {
-        synchronized (distMap) {
-            return distMap.get(key);
-        }
+        return distMap.get(key);
     }
 
     public String put(String key, String value) throws Exception {
         synchronized (distMap) {
-            String msg = "p;" + key + ";" + value;
-            sendMessage(msg.getBytes());
+            jChannel.send(null, "p;" + key + ";" + value);
+//            String msg = "p;" + key + ";" + value;
+//            sendMessage(msg.getBytes());
             return distMap.put(key, value);
         }
     }
 
     public String remove(String key) throws Exception {
         synchronized (distMap) {
-            String msg = "r;" + key;
-            sendMessage(msg.getBytes());
+            jChannel.send(null, "r;" + key);
+//            String msg = "r;" + key;
+//            sendMessage(msg.getBytes());
             return distMap.remove(key);
         }
     }
 
     public void printContent() {
-        synchronized (distMap) {
-            distMap.forEach((k, v) -> System.out.print(v + ", "));
-        }
+        distMap.forEach((k, v) -> System.out.print(v + ", "));
     }
 
     public void disconnect() {
         jChannel.close();
     }
 
-    private void sendMessage(byte[] content) throws Exception {
-        Message msg = new Message(null, content);
-        jChannel.send(msg);
-    }
+//    private void sendMessage(byte[] content) throws Exception {
+//        Message msg = new Message(null, content);
+//        jChannel.send(msg);
+//    }
 
     private void initProtocolStack(String multicastAddress) throws Exception {
         ProtocolStack stack = new ProtocolStack();
@@ -88,8 +85,7 @@ public class DistributedMap implements SimplStringMap {
                 .addProtocol(new UFC())
                 .addProtocol(new MFC())
                 .addProtocol(new FRAG2())
-                .addProtocol(new STATE())
-                .addProtocol(new SEQUENCER());
+                .addProtocol(new STATE());
 
         stack.init();
     }

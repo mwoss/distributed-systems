@@ -17,6 +17,7 @@ public class App {
         String[] input = {"void"};
         while (!input[0].equals("quit")) {
             input = scanner.nextLine().split("\\s+");
+//            System.out.println(input);
             switch (input[0]) {
                 case "put":
                     System.out.println(distributedMap.put(input[1], input[2]));
@@ -38,6 +39,7 @@ public class App {
                     break;
             }
         }
+
         distributedMap.disconnect();
     }
 
