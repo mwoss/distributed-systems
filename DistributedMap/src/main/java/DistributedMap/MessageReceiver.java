@@ -9,13 +9,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MessageReceiver extends ReceiverAdapter {
 
-    private final HashMap<String, String> distMap;
+    private final Map<String, String> distMap;
     private JChannel jChannel;
 
-    public MessageReceiver(HashMap<String, String> distMap, JChannel jChannel) {
+    public MessageReceiver(Map<String, String> distMap, JChannel jChannel) {
         this.distMap = distMap;
         this.jChannel = jChannel;
     }
@@ -59,7 +60,7 @@ public class MessageReceiver extends ReceiverAdapter {
     @Override
     public void setState(InputStream input) throws Exception {
         synchronized (distMap) {
-            HashMap<String, String> tmpMap = (HashMap<String, String>) Util.objectFromStream(new DataInputStream(input));
+            Map<String, String> tmpMap = (HashMap<String, String>) Util.objectFromStream(new DataInputStream(input));
             distMap.clear();
             distMap.putAll(tmpMap);
         }
