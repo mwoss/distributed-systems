@@ -12,8 +12,8 @@ import java.util.concurrent.TimeoutException;
 
 public class Doctor {
 
-    private final String EXCHANGE_NAME_IN = "EXCHANGE_DOCTOR_IN";
-    private final String EXCHANGE_NAME_OUT = "EXCHANGE_DOCTOR_OUT";
+    private static final String EXCHANGE_NAME_IN = "EXCHANGE_DOCTOR_IN";
+    private static final String EXCHANGE_NAME_OUT = "EXCHANGE_DOCTOR_OUT";
 
     private Channel emitterChannel;
     private Channel listenerChannel;
@@ -29,19 +29,17 @@ public class Doctor {
 
         emitterChannel.exchangeDeclare(EXCHANGE_NAME_OUT, BuiltinExchangeType.TOPIC);
         listenerChannel.exchangeDeclare(EXCHANGE_NAME_IN, BuiltinExchangeType.TOPIC);
-
-        getInformations();
-        initWorkers(emitterChannel, listenerChannel, id);
+        getInformation();
     }
 
-    private void getInformations() throws IOException {
+    private void getInformation() throws IOException {
         System.out.println("Doctor connected. Input ID:");
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         id = bufferedReader.readLine();
     }
 
-    private void initWorkers(Channel emitterChannel, Channel listenerChannel, String id){
-        DoctorMessageEmiter emitter = new DoctorMessageEmiter(emitterChannel, id);
+    private void initWorkers(){
+        DoctorMessageEmitter emitter = new DoctorMessageEmitter(emitterChannel, id);
         DoctorMessageListener listener = new DoctorMessageListener(listenerChannel, id);
         emitter.start();
         listener.receiveMessage();
@@ -49,5 +47,6 @@ public class Doctor {
 
     public static void main(String[] args) throws Exception{
         Doctor doctor = new Doctor();
+        doctor.initWorkers();
     }
 }
