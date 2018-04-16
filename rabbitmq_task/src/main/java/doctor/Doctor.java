@@ -5,7 +5,9 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.concurrent.TimeoutException;
 
 public class Doctor {
@@ -15,6 +17,7 @@ public class Doctor {
 
     private Channel emitterChannel;
     private Channel listenerChannel;
+    private String id;
 
     public Doctor() throws IOException, TimeoutException {
         ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -27,10 +30,21 @@ public class Doctor {
         emitterChannel.exchangeDeclare(EXCHANGE_NAME_OUT, BuiltinExchangeType.TOPIC);
         listenerChannel.exchangeDeclare(EXCHANGE_NAME_IN, BuiltinExchangeType.TOPIC);
 
+        getInformations();
+        initWorkers(emitterChannel, listenerChannel, id);
     }
 
-    private void outputInformations(){
-        System.out.println("**Doctor connected**");
+    private void getInformations() throws IOException {
+        System.out.println("Doctor connected. Input ID:");
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+        id = bufferedReader.readLine();
+    }
+
+    private void initWorkers(Channel emitterChannel, Channel listenerChannel, String id){
+        DoctorMessageEmiter emitter = new DoctorMessageEmiter(emitterChannel, id);
+        DoctorMessageListener listener = new DoctorMessageListener(listenerChannel, id);
+        emitter.start();
+        listener.receiveMessage();
     }
 
     public static void main(String[] args) throws Exception{
