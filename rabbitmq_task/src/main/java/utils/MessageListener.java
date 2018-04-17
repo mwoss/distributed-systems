@@ -1,5 +1,7 @@
 package utils;
 
+import java.io.IOException;
+
 public interface MessageListener {
-    void receiveMessage();
+    void receiveMessage() throws IOException;
 }

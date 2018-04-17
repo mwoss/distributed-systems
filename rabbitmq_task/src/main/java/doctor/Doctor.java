@@ -4,6 +4,7 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import utils.ConstValues;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,9 +12,6 @@ import java.io.InputStreamReader;
 import java.util.concurrent.TimeoutException;
 
 public class Doctor {
-
-    private static final String EXCHANGE_NAME_IN = "EXCHANGE_DOCTOR_IN";
-    private static final String EXCHANGE_NAME_OUT = "EXCHANGE_DOCTOR_OUT";
 
     private Channel emitterChannel;
     private Channel listenerChannel;
@@ -27,8 +25,8 @@ public class Doctor {
         this.emitterChannel = connection.createChannel();
         this.listenerChannel = connection.createChannel();
 
-        emitterChannel.exchangeDeclare(EXCHANGE_NAME_OUT, BuiltinExchangeType.TOPIC);
-        listenerChannel.exchangeDeclare(EXCHANGE_NAME_IN, BuiltinExchangeType.TOPIC);
+        emitterChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_OUT, BuiltinExchangeType.TOPIC);
+        listenerChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_IN, BuiltinExchangeType.TOPIC);
         getInformation();
     }
 
@@ -38,10 +36,10 @@ public class Doctor {
         id = bufferedReader.readLine();
     }
 
-    private void initWorkers(){
+    private void initWorkers() throws IOException {
         DoctorMessageEmitter emitter = new DoctorMessageEmitter(emitterChannel, id);
         DoctorMessageListener listener = new DoctorMessageListener(listenerChannel, id);
-        emitter.start();
+        emitter.startTask();
         listener.receiveMessage();
     }
 
