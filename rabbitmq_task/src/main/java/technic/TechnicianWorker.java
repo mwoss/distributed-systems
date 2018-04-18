@@ -8,26 +8,16 @@ import java.io.IOException;
 
 public class TechnicianWorker implements MessageListener {
 
-//    private Channel listenerChannel;
-//    private Channel emitterChannel;
     private Channel commonChannel;
     private String injury;
 
-//    public TechnicianWorker(Channel listenerChannel, Channel emitterChannel, String injury) throws IOException {
-//        this.emitterChannel = emitterChannel;
-//        this.listenerChannel = listenerChannel;
-//        this.injury = injury;
-//
-//        this.listenerChannel.queueDeclare(this.injury, false, false, false, null);
-//        this.listenerChannel.queueBind(this.injury, ConstValues.EXCHANGE_NAME_OUT, ConstValues.ROUTING_KEY_TECHNICIAN + this.injury);
-//    }
 
     public TechnicianWorker(Channel commonChannel, String injury) throws IOException {
         this.commonChannel = commonChannel;
         this.injury = injury;
 
         this.commonChannel.queueDeclare(this.injury, false, false, false, null);
-        this.commonChannel.queueBind(this.injury, ConstValues.EXCHANGE_NAME_OUT, ConstValues.ROUTING_KEY_TECHNICIAN + this.injury);
+        this.commonChannel.queueBind(this.injury, ConstValues.EXCHANGE_NAME_COMMON, ConstValues.ROUTING_KEY_TECHNICIAN + this.injury);
     }
 
     @Override
@@ -36,25 +26,35 @@ public class TechnicianWorker implements MessageListener {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                System.out.println("Received from doctor: " + message);
-                String msgToDoctor = messageToSend(message);
-                commonChannel.basicPublish(ConstValues.EXCHANGE_NAME_IN, ConstValues.ROUTING_KEY_DOCTOR + extractName(message),
-                        null, msgToDoctor.getBytes("UTF-8"));
-                commonChannel.basicAck(envelope.getDeliveryTag(), false);
+                handleMessage(message);
             }
         };
         System.out.println("Waiting for messages.");
         commonChannel.basicQos(1);
-        commonChannel.basicConsume(injury, false, consumer);
+        commonChannel.basicConsume(injury, true, consumer);
     }
 
     private String extractName(String message){
-        return message.split(" ")[2];
+        return message.split(" ")[3];
     }
 
-    private String messageToSend(String message){
+    private void handleMessage(String message) throws IOException{
         String[] data = message.split(" ");
-        data[2] = "done";
+        String producer_name = data[0];
+        if(producer_name.equals(ConstValues.DOCTOR)){
+            String msgToDoctor = messageToSend(data);
+            System.out.println("\u001B[33m" + "Received from doctor: " + message + "\u001B[0m");
+            commonChannel.basicPublish(ConstValues.EXCHANGE_NAME_COMMON, ConstValues.ROUTING_KEY_DOCTOR + extractName(message),
+                    null, msgToDoctor.getBytes("UTF-8"));
+        }
+        else if(producer_name.equals(ConstValues.ADMIN)){
+            System.out.println("\u001B[31m" + "Received from admin: " + message + "\u001B[0m");
+        }
+
+    }
+    private String messageToSend(String[] data){
+        data[0] = ConstValues.TECHNICIAN;
+        data[3] = "done";
         return String.join(" ", data);
     }
 }

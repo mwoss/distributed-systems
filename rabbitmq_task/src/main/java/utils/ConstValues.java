@@ -11,4 +11,8 @@ public class ConstValues {
     public static final String ROUTING_KEY_ADMIN = "hospital.#";
 
     public static final String[] INJURIES = {"knee", "elbow", "hip"};
+
+    public static final String DOCTOR = "DOCTOR";
+    public static final String ADMIN = "ADMIN";
+    public static final String TECHNICIAN = "TECHNICIAN";
 }
