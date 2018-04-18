@@ -15,8 +15,8 @@ public class DoctorMessageListener implements utils.MessageListener {
         this.listenerChannel = listenerChannel;
         this.id = id;
 
-        listenerChannel.queueDeclare(this.id, false, false, false, null);
-        listenerChannel.queueBind(this.id, ConstValues.EXCHANGE_NAME_IN, ConstValues.ROUTING_KEY_DOCTOR + this.id);
+        this.listenerChannel.queueDeclare(this.id, false, false, false, null);
+        this.listenerChannel.queueBind(this.id, ConstValues.EXCHANGE_NAME_IN, ConstValues.ROUTING_KEY_DOCTOR + this.id);
     }
 
     public void receiveMessage() throws IOException {
@@ -28,8 +28,6 @@ public class DoctorMessageListener implements utils.MessageListener {
                 listenerChannel.basicAck(envelope.getDeliveryTag(), false);
             }
         };
-        System.out.println("Waiting for messages.");
-        listenerChannel.basicQos(1);
         listenerChannel.basicConsume(id, false, consumer);
     }
 }

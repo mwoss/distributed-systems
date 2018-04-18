@@ -54,7 +54,7 @@ public class DoctorMessageEmitter implements Runnable, MessageEmitter {
         String[] data = message.split(" ");
         if(data.length != 2)
             throw new IllegalArgumentException("Not enough arguments");
-        if(Arrays.asList(ConstValues.INJURIES).contains(data[0]))
+        if(!Arrays.asList(ConstValues.INJURIES).contains(data[0]))
             throw new IllegalArgumentException("Unrecognized injury");
         return data[0];
     }

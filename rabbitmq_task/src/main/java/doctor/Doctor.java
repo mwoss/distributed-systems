@@ -13,8 +13,9 @@ import java.util.concurrent.TimeoutException;
 
 public class Doctor {
 
-    private Channel emitterChannel;
-    private Channel listenerChannel;
+//    private Channel emitterChannel;
+//    private Channel listenerChannel;
+    private Channel commonChannel;
     private String id;
 
     public Doctor() throws IOException, TimeoutException {
@@ -22,11 +23,14 @@ public class Doctor {
         connectionFactory.setHost("localhost");
         Connection connection = connectionFactory.newConnection();
 
-        this.emitterChannel = connection.createChannel();
-        this.listenerChannel = connection.createChannel();
+        this.commonChannel = connection.createChannel();
+        commonChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_COMMON, BuiltinExchangeType.TOPIC);
 
-        emitterChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_OUT, BuiltinExchangeType.TOPIC);
-        listenerChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_IN, BuiltinExchangeType.TOPIC);
+//        this.emitterChannel = connection.createChannel();
+//        this.listenerChannel = connection.createChannel();
+//
+//        emitterChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_OUT, BuiltinExchangeType.TOPIC);
+//        listenerChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_IN, BuiltinExchangeType.TOPIC);
         getInformation();
     }
 
@@ -37,8 +41,8 @@ public class Doctor {
     }
 
     private void initWorkers() throws IOException {
-        DoctorMessageEmitter emitter = new DoctorMessageEmitter(emitterChannel, id);
-        DoctorMessageListener listener = new DoctorMessageListener(listenerChannel, id);
+        DoctorMessageEmitter emitter = new DoctorMessageEmitter(commonChannel, id);
+        DoctorMessageListener listener = new DoctorMessageListener(commonChannel, id);
         emitter.startTask();
         listener.receiveMessage();
     }
