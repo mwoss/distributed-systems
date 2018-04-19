@@ -16,6 +16,9 @@ public class DoctorMessageListener implements utils.MessageListener {
 
         this.listenerChannel.queueDeclare(this.id, false, false, false, null);
         this.listenerChannel.queueBind(this.id, ConstValues.EXCHANGE_NAME_COMMON, ConstValues.ROUTING_KEY_DOCTOR + this.id);
+
+        this.listenerChannel.queueDeclare(this.id + "_admin", false, false, false, null);
+        this.listenerChannel.queueBind(this.id + "_admin", ConstValues.EXCHANGE_NAME_COMMON, ConstValues.ROUTING_KEY_ADMIN);
     }
 
     public void receiveMessage() throws IOException {
@@ -24,10 +27,10 @@ public class DoctorMessageListener implements utils.MessageListener {
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 handleMessage(message);
-//                listenerChannel.basicAck(envelope.getDeliveryTag(), false);
             }
         };
         listenerChannel.basicConsume(id, true, consumer);
+        listenerChannel.basicConsume(id + "_admin", true, consumer);
     }
 
     private void handleMessage(String message) throws IOException {

@@ -10,12 +10,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 
 public class Technician {
 
-//    private Channel listenerChannel;
-//    private Channel emitterChannel;
     private Channel commonChannel;
     private String[] injuries;
 
@@ -24,11 +23,6 @@ public class Technician {
         connectionFactory.setHost("localhost");
         Connection connection = connectionFactory.newConnection();
 
-//        this.listenerChannel = connection.createChannel();
-//        this.emitterChannel = connection.createChannel();
-//
-//        emitterChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_IN, BuiltinExchangeType.TOPIC);
-//        listenerChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_OUT, BuiltinExchangeType.TOPIC);
         this.commonChannel = connection.createChannel();
         commonChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_COMMON, BuiltinExchangeType.TOPIC);
 
@@ -39,6 +33,7 @@ public class Technician {
         System.out.println("Technician connected. Input two injury types:");
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 
+        //injury1 injury2 ID
         return parseInput(bufferedReader.readLine().split(" "));
     }
 
@@ -53,10 +48,9 @@ public class Technician {
     }
 
     private void initWorkers() throws IOException {
-//        TechnicianWorker technicianWorker1 = new TechnicianWorker(listenerChannel, emitterChannel, injuries[0]);
-//        TechnicianWorker technicianWorker2 = new TechnicianWorker(listenerChannel, emitterChannel, injuries[1]);
-        TechnicianWorker technicianWorker1 = new TechnicianWorker(commonChannel, injuries[0]);
-        TechnicianWorker technicianWorker2 = new TechnicianWorker(commonChannel, injuries[1]);
+        String name = Integer.toString(ThreadLocalRandom.current().nextInt());
+        TechnicianWorker technicianWorker1 = new TechnicianWorker(commonChannel, injuries[0], "tech" + name);
+        TechnicianWorker technicianWorker2 = new TechnicianWorker(commonChannel, injuries[1], "tech" + name);
         technicianWorker1.receiveMessage();
         technicianWorker2.receiveMessage();
     }

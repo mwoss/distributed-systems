@@ -10,14 +10,18 @@ public class TechnicianWorker implements MessageListener {
 
     private Channel commonChannel;
     private String injury;
+    private String id;
 
-
-    public TechnicianWorker(Channel commonChannel, String injury) throws IOException {
+    public TechnicianWorker(Channel commonChannel, String injury, String id) throws IOException {
         this.commonChannel = commonChannel;
         this.injury = injury;
+        this.id = id;
 
         this.commonChannel.queueDeclare(this.injury, false, false, false, null);
         this.commonChannel.queueBind(this.injury, ConstValues.EXCHANGE_NAME_COMMON, ConstValues.ROUTING_KEY_TECHNICIAN + this.injury);
+
+        this.commonChannel.queueDeclare(this.id, false, false, false, null);
+        this.commonChannel.queueBind(this.id, ConstValues.EXCHANGE_NAME_COMMON, ConstValues.ROUTING_KEY_ADMIN);
     }
 
     @Override
@@ -32,6 +36,7 @@ public class TechnicianWorker implements MessageListener {
         System.out.println("Waiting for messages.");
         commonChannel.basicQos(1);
         commonChannel.basicConsume(injury, true, consumer);
+        commonChannel.basicConsume(id, true, consumer);
     }
 
     private String extractName(String message){
