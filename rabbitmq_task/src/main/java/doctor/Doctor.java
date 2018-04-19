@@ -13,8 +13,6 @@ import java.util.concurrent.TimeoutException;
 
 public class Doctor {
 
-//    private Channel emitterChannel;
-//    private Channel listenerChannel;
     private Channel commonChannel;
     private String id;
 
@@ -26,11 +24,6 @@ public class Doctor {
         this.commonChannel = connection.createChannel();
         commonChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_COMMON, BuiltinExchangeType.TOPIC);
 
-//        this.emitterChannel = connection.createChannel();
-//        this.listenerChannel = connection.createChannel();
-//
-//        emitterChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_OUT, BuiltinExchangeType.TOPIC);
-//        listenerChannel.exchangeDeclare(ConstValues.EXCHANGE_NAME_IN, BuiltinExchangeType.TOPIC);
         getInformation();
     }
 

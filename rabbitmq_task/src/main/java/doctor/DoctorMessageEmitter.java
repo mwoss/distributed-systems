@@ -30,6 +30,7 @@ public class DoctorMessageEmitter implements Runnable, MessageEmitter {
         while (true) {
             System.out.println("Enter message: ");
             try {
+                //injury surname
                 message = bufferedReader.readLine();
                 if (message.equals("exit")) {
                     break;
