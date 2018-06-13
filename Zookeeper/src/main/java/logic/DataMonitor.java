@@ -51,7 +51,11 @@ public class DataMonitor implements Watcher, StatCallback{
                     break;
             }
         } else if (event.getType() == Watcher.Event.EventType.NodeChildrenChanged) {
-
+            int descNum = getDescendantsNumber(znode);
+            if(descendants < descNum){
+                System.out.println("desendants number: " + descNum);
+            }
+            descendants = descNum;
         } else {
             if (path != null && path.equals(znode)) {
                 // Something has changed on the node, let's find out
