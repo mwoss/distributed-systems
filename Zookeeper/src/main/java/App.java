@@ -12,7 +12,7 @@ public class App {
             System.exit(2);
         }
         String hostPort = args[0];
-        String znode = "znode_test";
+        String znode = "/zknode-test";
         String exec[] = new String[args.length - 1];
         System.arraycopy(args, 1, exec, 0, exec.length);
 

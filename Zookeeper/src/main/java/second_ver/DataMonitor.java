@@ -1,52 +1,52 @@
-package logic;
+package second_ver;
+
+import org.apache.zookeeper.AsyncCallback.StatCallback;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.KeeperException.Code;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.AsyncCallback.StatCallback;
-import org.apache.zookeeper.KeeperException.Code;
-import org.apache.zookeeper.data.Stat;
-
-public class DataMonitor implements Watcher, StatCallback{
-
+public class DataMonitor implements Watcher, StatCallback {
     private ZooKeeper zk;
     private String znode;
     private Watcher chainedWatcher;
-    boolean dead;
     private DataMonitorListener listener;
-    private int descendants;
     byte prevData[];
 
-    public DataMonitor(ZooKeeper zk, String znode, Watcher chainedWatcher, DataMonitorListener listener) {
+    public DataMonitor(ZooKeeper zk, String znode, Watcher chainedWatcher, DataMonitorListener listener) throws KeeperException, InterruptedException {
         this.zk = zk;
         this.znode = znode;
         this.chainedWatcher = chainedWatcher;
         this.listener = listener;
         zk.exists(znode, true, this, null);
-        descendants = getDescendantsNumber(znode);
+        try {
+            zk.getChildren(znode, this);
+        } catch (KeeperException | InterruptedException e) {
+            System.out.println("Node doesnt exists");
+        }
     }
 
     public void process(WatchedEvent event) {
         String path = event.getPath();
-        if (event.getType() == Watcher.Event.EventType.None) {
+        if (event.getType() == Event.EventType.None) {
             switch (event.getState()) {
                 case SyncConnected:
                     break;
                 case Expired:
-                    dead = true;
                     listener.closing(KeeperException.Code.SessionExpired);
                     break;
             }
-        } else if (event.getType() == Watcher.Event.EventType.NodeChildrenChanged) {
-            int descNum = getDescendantsNumber(znode);
-            if(descendants < descNum){
-                System.out.println("desendants number: " + descNum);
+        } else if (event.getType() == Event.EventType.NodeChildrenChanged) {
+            try {
+                System.out.println("Number of children nodes: " + countDescendants());
+            } catch (KeeperException | InterruptedException e) {
+                e.printStackTrace();
             }
-            descendants = descNum;
         } else {
             if (path != null && path.equals(znode)) {
                 zk.exists(znode, true, this, null);
@@ -57,14 +57,17 @@ public class DataMonitor implements Watcher, StatCallback{
         }
     }
 
-    private int getDescendantsNumber(String path) {
+        private int countDescendants() throws KeeperException, InterruptedException {
+        List<String> children = zk.getChildren(znode, this);
+        return children.size() + children.stream().mapToInt(child -> countDescendants(znode + "/" + child)).sum();
+    }
+
+    private int countDescendants(String path) {
         try {
-            Stat s = zk.exists(path, this);
-            if (s != null) {
-                List<String> children = zk.getChildren(path, this);
-                return children.size() + children.stream().mapToInt(child -> getDescendantsNumber(path + "/" + child)).sum();
-            }
+            List<String> children = zk.getChildren(path, this);
+            return children.size() + children.stream().mapToInt(c -> countDescendants(path + "/" + c)).sum();
         } catch (KeeperException | InterruptedException e) {
+            e.printStackTrace();
         }
         return 0;
     }
@@ -80,7 +83,6 @@ public class DataMonitor implements Watcher, StatCallback{
                 break;
             case Code.SessionExpired:
             case Code.NoAuth:
-                dead = true;
                 listener.closing(rc);
                 return;
             default:
@@ -92,10 +94,8 @@ public class DataMonitor implements Watcher, StatCallback{
         if (exists) {
             try {
                 b = zk.getData(znode, false, null);
-            } catch (KeeperException e) {
+            } catch (KeeperException | InterruptedException e) {
                 e.printStackTrace();
-            } catch (InterruptedException e) {
-                return;
             }
         }
         if ((b == null && b != prevData)
